@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>智能仓库系统</title>
+    <style>
+        body { margin: 0; display: flex; height: 600px; width: 1024px; font-family: Arial; background: #222; color: white; }
+        .video-box { width: 640px; border-right: 2px solid #444; }
+        .info-box { flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .btn { padding: 20px 40px; margin: 10px; font-size: 20px; cursor: pointer; border-radius: 10px; border: none; width: 80%; }
+        .btn-blue { background: #007bff; color: white; }
+        .btn-green { background: #28a745; color: white; }
+        #user-status { font-size: 24px; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <div class="video-box">
+        <h3 style="text-align: center;">人脸识别区域</h3>
+        <img src="{{ url_for('video_feed') }}" width="640">
+    </div>
+    <div class="info-box">
+        <div id="user-status">正在识别...</div>
+        <!-- 这里的逻辑由 JS 每隔 1 秒请求一次后端状态来更新按钮 -->
+        <div id="action-btns">
+            <button class="btn btn-blue" onclick="location.href='/register_page'">录入新信息</button>
+            <button class="btn btn-green" id="enter-btn" style="display:none;" onclick="location.href='/dashboard'">进入系统</button>
+        </div>
+    </div>
+
+    <script>
+        // 每秒检查一次当前识别到的人是谁
+        setInterval(() => {
+            fetch('/get_current_user')
+                .then(response => response.json())
+                .then(data => {
+                    const status = document.getElementById('user-status');
+                    const btn = document.getElementById('enter-btn');
+                    if (data.name === "Stranger") {
+                        status.innerText = "状态: 陌生人";
+                        btn.style.display = "none";
+                    } else {
+                        status.innerText = "欢迎: " + data.name + " (" + data.role + ")";
+                        btn.style.display = "block";
+                    }
+                });
+        }, 1000);
+    </script>
+</body>
+</html>

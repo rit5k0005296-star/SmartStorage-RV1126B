@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>信息录入</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
+        .reg-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 80%; max-width: 500px; }
+        /* 增加 box-sizing 保证输入框不会超出白框边界 */
+        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 18px; box-sizing: border-box; } 
+        
+        .btn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; margin-top: 10px; }
+        .btn:active { opacity: 0.8; }
+        .btn-cancel { background: #6c757d; } /* 灰色取消按钮 */
+        
+        /* 键盘样式优化 */
+        .simple-keyboard { width: 100%; max-width: 800px; margin-top: 20px; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="reg-box">
+        <h2>录入身份信息</h2>
+        <form action="/do_register" method="POST" id="regForm">
+            <input type="text" class="input" name="name" placeholder="点击输入姓名" required>
+            
+            <select name="role" id="roleSelect" onchange="toggleFields()">
+                <option value="student">我是：学生</option>
+                <option value="admin">我是：宿舍楼管理员</option>
+            </select>
+            
+            <div id="student-fields">
+                <input type="text" class="input" name="dorm_info" placeholder="点击输入宿舍号 (如: 302-A)">
+            </div>
+            
+            <div id="admin-fields" style="display:none;">
+                <input type="password" class="input" name="password" placeholder="点击设置管理员密码">
+            </div>
+            
+            <button type="submit" class="btn">✅ 保存并注册人脸</button>
+            
+            <!-- 修复1：增加取消返回按钮，直接跳转回根目录 -->
+            <button type="button" class="btn btn-cancel" onclick="location.href='/'">❌ 取消并返回主页</button>
+        </form>
+    </div>
+    
+    <!-- 虚拟键盘容器 -->
+    <div class="simple-keyboard"></div>
+
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
+    <script>
+        function toggleFields() {
+            var role = document.getElementById('roleSelect').value;
+            document.getElementById('student-fields').style.display = (role === 'student' ? 'block' : 'none');
+            document.getElementById('admin-fields').style.display = (role === 'admin' ? 'block' : 'none');
+        }
+
+        // 虚拟键盘初始化逻辑
+        const Keyboard = window.SimpleKeyboard.default;
+        let selectedInput;
+
+        const myKeyboard = new Keyboard({
+            onChange: input => { 
+                if (selectedInput) {
+                    selectedInput.value = input; 
+                }
+            },
+            onKeyPress: button => {
+                // 监听大小写切换键
+                if (button === "{shift}") {
+                    let currentLayout = myKeyboard.options.layoutName;
+                    let shiftToggle = currentLayout === "default" ? "shift" : "default";
+                    myKeyboard.setOptions({ layoutName: shiftToggle });
+                }
+            },
+            // 修复2：直接在键盘顶部加上独立的一排数字按键，并完善大小写切换布局
+            layout: {
+                'default': [
+                    '1 2 3 4 5 6 7 8 9 0',
+                    'q w e r t y u i o p',
+                    'a s d f g h j k l',
+                    '{shift} z x c v b n m {backspace}',
+                    '{space}'
+                ],
+                'shift': [
+                    '! @ # $ % ^ & * ( )',
+                    'Q W E R T Y U I O P',
+                    'A S D F G H J K L',
+                    '{shift} Z X C V B N M {backspace}',
+                    '{space}'
+                ]
+            },
+            // 让功能键显示中文，更好懂
+            display: {
+                '{backspace}': '删除 ⌫',
+                '{space}': '空格',
+                '{shift}': '大小写切换'
+            }
+        });
+
+        // 绑定所有输入框，点击时唤起键盘
+        document.querySelectorAll(".input").forEach(input => {
+            input.addEventListener("focus", event => {
+                selectedInput = event.target;
+                myKeyboard.setOptions({ inputName: event.target.name });
+                myKeyboard.setInput(event.target.value);
+            });
+        });
+    </script>
+</body>
+</html>
